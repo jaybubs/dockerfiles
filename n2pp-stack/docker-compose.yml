@@ -1,0 +1,26 @@
+version: '3'
+services:
+        web:
+                image: nginx:alpine
+                container_name: kokot
+                ports:
+                        - "8080:80"
+                        - "444:443"
+                volumes:
+                        #nginx global conf
+                        - ./docker/nginx/conf.d:/etc/nginx/conf.d
+                        - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf
+                        - ./sites/site1/site1.conf:/etc/nginx/sites-available/site1.conf
+                        - ./sites/site2/site2.conf:/etc/nginx/sites-available/site2.conf
+                        - ./sites/site1/public:/var/www/site1/public
+                        - ./sites/site2/public:/var/www/site2/public
+                links:
+                        - php-fpm
+        php-fpm:
+                image: php:7.4.1-fpm-alpine
+                container_name: pica
+                ports:
+                        - "9000:9000"
+                volumes:
+                        - ./sites/site1/public:/var/www/site1/public
+                        - ./sites/site2/public:/var/www/site2/public

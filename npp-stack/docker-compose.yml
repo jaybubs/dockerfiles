@@ -1,0 +1,93 @@
+version: '3'
+services:
+        nginx:
+                image: nginx:alpine
+                container_name: kokot
+                ports:
+                        - "8080:80"
+                        - "444:443"
+                volumes:
+                        #nginx global conf
+                        - ./docker/nginx/conf.d:/etc/nginx/conf.d
+                        - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf
+                        - ./sites/mysite/mysite.conf:/etc/nginx/sites-available/mysite.conf
+                        - ./sites/coffeepage/coffeepage.conf:/etc/nginx/sites-available/coffeepage.conf
+                        - ./sites/mysite/public:/var/www/mysite/public
+                        - ./sites/coffeepage/:/var/www/coffeepage/
+                        - ./sites/coffeepage/page:/var/www/coffeepage/page
+                links:
+                        - php-fpm
+                        - mariadb
+                networks:
+                        - web
+
+        php-fpm:
+                # image: php:7.4.1-fpm-alpine
+                build:
+                        context: ./docker/php
+                container_name: pica
+                ports:
+                        - "9000:9000"
+                volumes:
+                        - ./sites/mysite/public:/var/www/mysite/public
+                        - ./sites/coffeepage/page:/var/www/coffeepage/page
+                        - ./sites/coffeepage:/var/www/coffeepage
+                networks:
+                        - web
+
+        mariadb:
+                image: mariadb:10.4.11
+                container_name: bastard
+                environment:
+                        # MYSQL_INITDB_SKIP_TZINFO: 1
+                        TZ: "Europe/Rome"
+                        MYSQL_USER: ${MYSQL_USER}
+                        MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+                        MYSQL_DATABASE: ${MYSQL_DATABASE}
+                        MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+                        DB_HOST: mariadb
+                ports:
+                        - "3306:3306"
+                restart: always
+                volumes:
+                        - ./mdb:/var/lib/mysql
+                networks:
+                        - web 
+
+        # postgres:
+        #         image: postgres:12.1-alpine
+        #         container_name: kurva
+        #         environment:
+        #                 POSTGRES_USER: ${POSTGRES_USER:-postgres}
+        #                 POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+        #                 PGDATA: /data/postgres
+        #         volumes:
+        #                 - ./mydb:/data/postgres
+        #         ports:
+        #                 - "5432:5432"
+        #         networks:
+        #                 - postgres
+        #         depends_on:
+        #                 - php-fpm
+
+        # pgadmin:
+        #         image: dpage/pgadmin4
+        #         container_name: chuj
+        #         environment:
+        #                 PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
+        #                 PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
+        #         volumes:
+        #                 - pgadmin:/root/.pgadmin
+        #         ports:
+        #                 - "${PGADMIN_PORT:-5050}:80"
+        #         networks:
+        #                 - postgres
+networks:
+        # postgres:
+        #         driver: bridge
+        web:
+                driver: bridge
+volumes:
+        mariadb:
+        # pgadmin:
+
