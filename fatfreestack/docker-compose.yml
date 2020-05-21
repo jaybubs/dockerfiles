@@ -1,0 +1,57 @@
+version: '3'
+services:
+        nginx:
+                image: nginx:alpine
+                container_name: kokot
+                ports:
+                        - "8080:80"
+                        - "444:443"
+                volumes:
+                        #nginx global conf
+                        - ./docker/nginx/conf.d:/etc/nginx/conf.d
+                        - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf
+                        - ./sites/coffee/coffee.conf:/etc/nginx/sites-available/coffee.conf
+                        - ./sites/coffee/public:/var/www/coffee/public
+                        - ./sites/coffee/:/var/www/coffee/
+                links:
+                        - php-fpm
+                        - mariadb
+                networks:
+                        - web
+
+        php-fpm:
+                build:
+                        context: ./docker/php
+                container_name: pica
+                ports:
+                        - "9000:9000"
+                volumes:
+                        - ./sites/coffee/public:/var/www/coffee/public
+                        - ./sites/coffee:/var/www/coffee
+                        - ./docker/php/custom.ini:/usr/local/etc/php/conf.d/custom.ini
+                networks:
+                        - web
+
+        mariadb:
+                image: mariadb:10.4.11
+                container_name: bastard
+                environment:
+                        # MYSQL_INITDB_SKIP_TZINFO: 1
+                        TZ: "Europe/Rome"
+                        MYSQL_USER: ${MYSQL_USER}
+                        MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+                        MYSQL_DATABASE: ${MYSQL_DATABASE}
+                        MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+                        DB_HOST: mariadb
+                ports:
+                        - "3306:3306"
+                restart: always
+                volumes:
+                        - ./mdb:/var/lib/mysql
+                networks:
+                        - web 
+networks:
+        web:
+                driver: bridge
+volumes:
+        mariadb:
