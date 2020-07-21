@@ -13,6 +13,7 @@ services:
                         - ./sites/coffee/coffee.conf:/etc/nginx/sites-available/coffee.conf
                         - ./sites/coffee/public:/var/www/coffee/public
                         - ./sites/coffee/:/var/www/coffee/
+                        - ./logs/nginx/:/var/log/nginx/
                 links:
                         - php-fpm
                         - mariadb
